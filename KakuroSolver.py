@@ -1,3 +1,4 @@
+import copy
 import os
 import time
 
@@ -9,6 +10,11 @@ class KakuroSolver:
                              [-1, {'D': 11, 'R': 27}, 0, 0, 0, 0, 0], [{'R': 3}, 0, 0, {'D': 14, 'R': 19}, 0, 0, 0],
                              [{'R': 34}, 0, 0, 0, 0, 0, {'D': 17}], [-1, {'R': 30}, 0, 0, 0, 0, 0],
                              [-1, {'R': 3}, 0, 0, {'R': 16}, 0, 0]]
+        self.domains = {}
+        for i in range(7):
+            for j in range(7):
+                if self.kakuroPuzzle[i][j] == 0:
+                    self.domains.update({(i, j): [1, 2, 3, 4, 5, 6, 7, 8, 9]})
 
     def unassigned(self, empty):
         for i in range(7):
@@ -103,22 +109,92 @@ class KakuroSolver:
                 return False
         return True
 
+    def ac_3(self, q):
+        while len(q) != 0:
+            neighbor = q.pop(0)
+            if self.remove_inconsistent_values(neighbor):
+                if len(self.domains[(neighbor[0][0], neighbor[0][1])]) == 0:
+                    return False
+                new_neighbors = self.find_neighbors(neighbor[0])
+                for new_neighbor in new_neighbors:
+                    q.append((new_neighbor, neighbor[0]))
+        return True
+
+    def remove_inconsistent_values(self, neighbor):
+        #tail = neighbor[0]
+        #head = neighbor[1]
+        #for i in self.domains[(tail[0], tail[1])]:
+        pass
+    def forward_checking(self, current_node, digit, neighbors):
+        for neighbor in neighbors:
+            if self.kakuroPuzzle[neighbor[0]][neighbor[1]] != 0:
+                continue
+            fake_neighbor_domain = copy.deepcopy(self.domains[(neighbor[0], neighbor[1])])
+            row_sum = self.calc_row_sum(current_node[0], current_node[1], digit)
+            col_sum = self.calc_col_sum(current_node[0], current_node[1], digit)
+            clues = self.find_clue_cells(current_node[0], current_node[1])
+            for x in fake_neighbor_domain:
+                if x == self.kakuroPuzzle[current_node[0]][current_node[1]]:
+                    self.domains[(neighbor[0], neighbor[1])].remove(x)
+                    continue
+                if current_node[1] == neighbor[1] and x + col_sum > clues[0]['D']:
+                    self.domains[(neighbor[0], neighbor[1])].remove(x)
+                    continue
+                if current_node[0] == neighbor[0] and x + row_sum > clues[1]['R']:
+                    self.domains[(neighbor[0], neighbor[1])].remove(x)
+                    continue
+            if len(self.domains[neighbor[0], neighbor[1]]) == 0:
+                return False
+        return True
+
+
+
     def kakuro_solver(self):
         empty = [0, 0]
         if not self.unassigned(empty):
             return True
         row = empty[0]
         col = empty[1]
-        for i in range(1, 10):
+        for i in self.domains.get((row, col)):
             if self.can_place_digit(row, col, i):
                 self.kakuroPuzzle[row][col] = i
-                if self.kakuro_solver():
-                    return True
-                self.print_kakuro()
-                time.sleep(0.02)
-                os.system("clear")
+                ex_puzzle = copy.deepcopy(self.kakuroPuzzle)
+                ex_domain = copy.deepcopy(self.domains)
+                self.domains[(row, col)] = [i]
+                neighbors = self.find_neighbors([row, col])
+                if self.forward_checking([row, col], i, neighbors):
+                    if self.kakuro_solver():
+                        return True
+                #self.print_kakuro()
+                #time.sleep(0.02)
+                #print()
+                #os.system("clear")
+                self.kakuroPuzzle = ex_puzzle
                 self.kakuroPuzzle[row][col] = 0
+                self.domains = ex_domain
         return False
+
+    def find_neighbors(self, neighbor):
+        row = neighbor[0]
+        col = neighbor[1]
+        res = []
+        for i in reversed(range(row)):
+            if type(self.kakuroPuzzle[i][col]) == dict:
+                break
+            res.append([i, col])
+        for i in range(row + 1, 7):
+            if type(self.kakuroPuzzle[i][col]) == dict:
+                break
+            res.append([i, col])
+        for j in reversed(range(col)):
+            if type(self.kakuroPuzzle[row][j]) == dict:
+                break
+            res.append([row, j])
+        for j in range(col + 1, 7):
+            if type(self.kakuroPuzzle[row][j]) == dict:
+                break
+            res.append([row, j])
+        return res
 
     def print_kakuro(self):
         for i in range(7):
