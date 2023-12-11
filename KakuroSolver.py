@@ -9,18 +9,34 @@ class KakuroSolver:
                              [-1, -1, {'D': 27, 'R': 16}, 0, 0, {'D': 17}, {'D': 17}],
                              [-1, {'D': 11, 'R': 27}, 0, 0, 0, 0, 0], [{'R': 3}, 0, 0, {'D': 14, 'R': 19}, 0, 0, 0],
                              [{'R': 34}, 0, 0, 0, 0, 0, {'D': 17}], [-1, {'R': 30}, 0, 0, 0, 0, 0],
-                             [-1, {'R': 3}, 0, 0, {'R': 16}, 0, 0]]]
+                             [-1, {'R': 3}, 0, 0, {'R': 16}, 0, 0]],
 
+                              [[-1, {'D': 10}, {'D': 10}, -1, -1, -1, -1, -1, {'D': 23}, {'D': 16}],
+                               [{'R': 4}, 0, 0, {'D': 17}, -1, -1, -1, {'D': 17, 'R': 16}, 0, 0],
+                               [{'R': 23}, 0, 0, 0, {'D': 20}, -1, {'D': 30, 'R': 24}, 0, 0, 0],
+                               [-1, {'R': 13}, 0, 0, 0, {'D': 20, 'R': 23}, 0, 0, 0, -1],
+                               [-1, -1, -1, {'R': 11}, 0, 0, 0, 0, -1, -1],
+                               [-1, -1, -1, {'D': 6, 'R': 23}, 0, 0, 0, -1, -1, -1],
+                               [-1, -1, {'D': 7, 'R': 25}, 0, 0, 0, 0, {'D': 3}, {'D': 9}, -1],
+                               [-1, {'D': 4, 'R': 8}, 0, 0, 0, {'R': 7}, 0, 0, 0, {'D': 4}],
+                               [{'R': 6}, 0, 0, 0, -1, -1, {'R': 6}, 0, 0, 0],
+                               [{'R': 3}, 0, 0, -1, -1, -1, -1, {'R': 4}, 0, 0]
+                               ]
+                              ]
+        # set your desire puzzle in below assignment:
+        # 0 is easy
+        # 1 is hard
         self.kakuroPuzzle = self.kakuroPuzzles[0]
+        self.kakuro_size = len(self.kakuroPuzzle[0])
         self.domains = {}
-        for i in range(7):
-            for j in range(7):
+        for i in range(self.kakuro_size):
+            for j in range(self.kakuro_size):
                 if self.kakuroPuzzle[i][j] == 0:
                     self.domains.update({(i, j): [1, 2, 3, 4, 5, 6, 7, 8, 9]})
 
         self.clue_cells = {}
-        for i in range(7):
-            for j in range(7):
+        for i in range(self.kakuro_size):
+            for j in range(self.kakuro_size):
                 if type(self.kakuroPuzzle[i][j]) is dict:
                     clue = self.kakuroPuzzle[i][j]
                     keys = clue.keys()
@@ -34,21 +50,21 @@ class KakuroSolver:
             clue_col = clue[0][1]
             clue_dir = clue[1]
             if clue_dir == 'D':
-                for i in range(clue_row + 1, 7):
-                    if type(self.kakuroPuzzle[i][clue_col]) is not dict:
+                for i in range(clue_row + 1, self.kakuro_size):
+                    if type(self.kakuroPuzzle[i][clue_col]) is not dict and self.kakuroPuzzle[i][clue_col] == 0:
                         self.clue_cells[clue].append([i, clue_col])
                     else:
                         break
             elif clue_dir == 'R':
-                for j in range(clue_col + 1, 7):
-                    if type(self.kakuroPuzzle[clue_row][j]) is not dict:
+                for j in range(clue_col + 1, self.kakuro_size):
+                    if type(self.kakuroPuzzle[clue_row][j]) is not dict and self.kakuroPuzzle[clue_row][j] == 0:
                         self.clue_cells[clue].append([clue_row, j])
                     else:
                         break
 
     def unassigned(self, empty):
-        for i in range(7):
-            for j in range(7):
+        for i in range(self.kakuro_size):
+            for j in range(self.kakuro_size):
                 if self.kakuroPuzzle[i][j] == 0:
                     empty[0] = i
                     empty[1] = j
@@ -202,26 +218,26 @@ class KakuroSolver:
         col = neighbor[1]
         res = []
         for i in reversed(range(row)):
-            if type(self.kakuroPuzzle[i][col]) == dict:
+            if type(self.kakuroPuzzle[i][col]) == dict or self.kakuroPuzzle[i][col] == -1:
                 break
             res.append([i, col])
-        for i in range(row + 1, 7):
-            if type(self.kakuroPuzzle[i][col]) == dict:
+        for i in range(row + 1, self.kakuro_size):
+            if type(self.kakuroPuzzle[i][col]) == dict or self.kakuroPuzzle[i][col] == -1:
                 break
             res.append([i, col])
         for j in reversed(range(col)):
-            if type(self.kakuroPuzzle[row][j]) == dict:
+            if type(self.kakuroPuzzle[row][j]) == dict or self.kakuroPuzzle[row][j] == -1:
                 break
             res.append([row, j])
-        for j in range(col + 1, 7):
-            if type(self.kakuroPuzzle[row][j]) == dict:
+        for j in range(col + 1, self.kakuro_size):
+            if type(self.kakuroPuzzle[row][j]) == dict or self.kakuroPuzzle[row][j] == -1:
                 break
             res.append([row, j])
         return res
 
     def print_kakuro(self):
-        for i in range(7):
-            for j in range(7):
+        for i in range(self.kakuro_size):
+            for j in range(self.kakuro_size):
                 if self.kakuroPuzzle[i][j] == -1:
                     print('B', end=" ")
                 elif type(self.kakuroPuzzle[i][j]) == dict:
